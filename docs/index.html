@@ -3,141 +3,319 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b1820">
-<title>Radar GO</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<title>Radar GO</title>
+<meta name="theme-color" content="#0aa3b5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap">
 <style>
-/* Layout : une colonne façon appli mobile, en-tête collant, "à ne pas rater" puis la liste filtrable */
+/* Layout : en-tête radar, vedette du moment + liste « en cours », barre de filtres collante, grille de cartes illustrées ou vue semaine, fiche détaillée en fenêtre. */
 :root{
-  --bg:#eef3f6; --surface:#ffffff; --ink:#0f2a3a; --muted:#5b7282; --line:#d6e1e8;
-  --accent:#1f7a9e; --accent-ink:#ffffff; --sun:#f2b632;
-  --good:#1f9d5b; --mid:#d98a0b; --low:#c2483d;
-  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
-  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#eaf3f2; --surface:#ffffff; --sunk:#f3f8f7; --ink:#12313a; --muted:#587680; --line:#d3e3e2;
+  --accent:#0a9fb1; --accent-ink:#ffffff;
+  --raid:#d6336c; --dyna:#a8259a; --star:#d97a06; --event:#0b8fa8; --league:#4c5fd5; --other:#7b6650;
+  --good:#1f9d55; --mid:#d98a06; --low:#8a9aa0; --live:#e0315b;
+  --display:"Fredoka","Nunito Sans",system-ui,sans-serif;
+  --body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:18px; --shadow:0 1px 2px rgb(18 49 58/.06),0 6px 20px rgb(18 49 58/.07);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0b1820; --surface:#12242f; --ink:#e6f0f5; --muted:#8fa6b3; --line:#22394a;
-  --accent:#4fb3d9; --accent-ink:#06202c; --sun:#f5c452;
-  --good:#3cc47c; --mid:#f0a830; --low:#ec6b5f; color-scheme:dark}}
+  --bg:#0c1a1f; --surface:#132a31; --sunk:#0f2228; --ink:#e4f2f1; --muted:#8fb0b6; --line:#23424a;
+  --accent:#2cc4d4; --accent-ink:#06262c;
+  --raid:#ff6f9c; --dyna:#e062d2; --star:#ffb44d; --event:#43c5de; --league:#8f9eff; --other:#c7ad8f;
+  --good:#4fd389; --mid:#ffbe4d; --low:#7d959b; --live:#ff5c7f;
+  --shadow:0 1px 2px rgb(0 0 0/.3),0 8px 24px rgb(0 0 0/.25); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0b1820; --surface:#12242f; --ink:#e6f0f5; --muted:#8fa6b3; --line:#22394a;
-  --accent:#4fb3d9; --accent-ink:#06202c; --sun:#f5c452;
-  --good:#3cc47c; --mid:#f0a830; --low:#ec6b5f; color-scheme:dark}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
-.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+  --bg:#0c1a1f; --surface:#132a31; --sunk:#0f2228; --ink:#e4f2f1; --muted:#8fb0b6; --line:#23424a;
+  --accent:#2cc4d4; --accent-ink:#06262c;
+  --raid:#ff6f9c; --dyna:#e062d2; --star:#ffb44d; --event:#43c5de; --league:#8f9eff; --other:#c7ad8f;
+  --good:#4fd389; --mid:#ffbe4d; --low:#7d959b; --live:#ff5c7f;
+  --shadow:0 1px 2px rgb(0 0 0/.3),0 8px 24px rgb(0 0 0/.25); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:18px 10px;display:grid;gap:12px}
-.brand{display:flex;align-items:center;gap:12px}
-.radar{width:40px;height:40px;border-radius:50%;flex:none;position:relative;overflow:hidden;
-  background:radial-gradient(circle,var(--accent) 0 3px,transparent 4px),repeating-radial-gradient(circle,transparent 0 7px,var(--line) 7px 8px);border:2px solid var(--accent)}
-.radar::after{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,color-mix(in srgb,var(--accent) 55%,transparent),transparent 25%);animation:sweep 3s linear infinite}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 40px;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;letter-spacing:-.01em}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+img{max-width:100%}
+.num{font-variant-numeric:tabular-nums}
+
+/* En-tête */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.brand h1{font-size:clamp(28px,5vw,40px);font-weight:700;line-height:1}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.radar{width:52px;height:52px;border-radius:50%;flex:none;position:relative;overflow:hidden;
+  background:radial-gradient(circle,transparent 30%,color-mix(in srgb,var(--accent) 25%,transparent) 31%,transparent 33%,transparent 62%,color-mix(in srgb,var(--accent) 25%,transparent) 63%,transparent 65%),color-mix(in srgb,var(--accent) 12%,var(--surface));
+  border:2px solid var(--accent)}
+.radar::before{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,color-mix(in srgb,var(--accent) 70%,transparent),transparent 25%);animation:sweep 3s linear infinite}
+.radar::after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:var(--raid);top:14px;left:31px;box-shadow:0 0 0 3px color-mix(in srgb,var(--raid) 30%,transparent)}
 @keyframes sweep{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.radar::after{animation:none}}
-h1{font-family:var(--display);font-weight:800;font-size:1.7rem;margin:0;letter-spacing:-.01em}
-.sub{color:var(--muted);font-size:.85rem}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
-.chip{font:600 .85rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;white-space:nowrap;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.chip:focus-visible,a:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
-h2{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:22px 0 10px;text-wrap:balance}
-.top{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.hot{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;min-width:0}
-.hot .big{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
-.list{display:grid;gap:10px}
-.ev{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr auto;gap:4px 14px;min-width:0}
-.ev.live{border-color:var(--good)}
-.name{font-weight:600;font-size:1rem;min-width:0;overflow-wrap:anywhere}
-.meta{color:var(--muted);font-size:.85rem;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
-.pill{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
-.pill.live{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
-.score{grid-row:1/span 3;grid-column:2;text-align:center;align-self:start;min-width:58px}
-.ring{--p:50;--c:var(--mid);width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
-  background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0)}
-.ring span{width:42px;height:42px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:800 .95rem var(--display);font-variant-numeric:tabular-nums}
-.score small{display:block;color:var(--muted);font-size:.68rem;margin-top:3px}
-.why{color:var(--muted);font-size:.85rem;grid-column:1}
-.when{font-variant-numeric:tabular-nums}
-a{color:var(--accent);font-weight:600;font-size:.85rem;text-decoration:none}
-details.more{grid-column:1/-1;margin-top:6px;border-top:1px solid var(--line);padding-top:8px}
-details.more summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.85rem;list-style:none}
-details.more summary::-webkit-details-marker{display:none}
-details.more summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
-details.more[open] summary::before{content:"▾ "}
-.sec{margin-top:10px;display:grid;gap:6px}
-.sec h3{margin:0;font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.mons{display:flex;flex-wrap:wrap;gap:6px}
-.mon{font-size:.82rem;padding:3px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
-.mon.shiny{border-color:color-mix(in srgb,var(--sun) 70%,var(--line));background:color-mix(in srgb,var(--sun) 14%,var(--surface))}
-.bon{margin:0;padding-left:18px;color:var(--ink);font-size:.85rem;display:grid;gap:3px}
-.preview{color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
-.time{grid-column:1;display:grid;gap:3px;margin-top:2px}
-.frline{font-weight:600;font-variant-numeric:tabular-nums}
-.frline b{font-weight:600;color:var(--accent)}
-.alt{color:var(--muted);font-size:.84rem;font-variant-numeric:tabular-nums}
-.mode{font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:6px;justify-self:start}
-.mode.fr{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
-.mode.local{background:color-mix(in srgb,var(--sun) 22%,transparent);color:var(--ink)}
-.mode.city{background:color-mix(in srgb,var(--low) 14%,transparent);color:var(--low)}
-.world{display:grid;gap:5px;margin-top:6px}
-.wrow{display:grid;grid-template-columns:7.5em 1fr;gap:2px 8px;align-items:center;font-size:.8rem}
-.wrow .lbl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wrow .hrs{font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
-.wrow.me .lbl,.wrow.me .hrs{color:var(--accent);font-weight:600}
-.track{grid-column:1/-1;position:relative;height:6px;background:var(--bg);border-radius:3px;min-width:0}
-.bar{position:absolute;top:0;bottom:0;border-radius:3px;background:color-mix(in srgb,var(--accent) 45%,transparent)}
-.wrow.me .bar{background:var(--accent)}
-.now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--low)}
-.wcap{font-size:.75rem;color:var(--muted)}
-.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:20px;color:var(--muted)}
-.legend{color:var(--muted);font-size:.8rem;margin-top:22px;display:grid;gap:4px}
+.clock{text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.clock b{font:600 26px/1 var(--display)}
+.clock small{color:var(--muted);font-size:12.5px}
+
+/* Vedette */
+.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.hero{grid-template-columns:minmax(0,1fr)}}
+.feature{position:relative;border-radius:24px;overflow:hidden;cursor:pointer;color:var(--ink);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,var(--surface)),color-mix(in srgb,var(--c) 6%,var(--surface)));
+  border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:22px;min-height:250px}
+.feature .eyebrow{font:800 11.5px/1 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--c)}
+.feature h2{font-size:clamp(24px,3.6vw,34px);line-height:1.08;margin:10px 0 8px}
+.feature .txt{display:flex;flex-direction:column;gap:6px;min-width:0;z-index:1}
+.feature .why{color:var(--muted);font-size:14px;max-width:46ch}
+.feature .pics{display:flex;align-items:flex-end;justify-content:flex-end;min-width:0}
+.feature .pics img{width:min(190px,34vw);height:auto;filter:drop-shadow(0 10px 18px rgb(0 0 0/.18));margin-left:-48px}
+.feature .pics img:first-child{margin-left:0}
+.feature .ring{position:absolute;top:18px;right:18px}
+.feature .big-ico{width:120px;height:120px;color:var(--c);opacity:.85;align-self:center}
+.side{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.side h2{font-size:18px;display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--live);box-shadow:0 0 0 4px color-mix(in srgb,var(--live) 22%,transparent);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--live) 0%,transparent)}}
+.row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;cursor:pointer;border:0;background:none;text-align:left;width:100%}
+.row:hover{background:var(--sunk)}
+.row .mini{width:40px;height:40px;flex:none;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 14%,var(--surface));color:var(--c)}
+.row .mini img{width:40px;height:40px;object-fit:contain}
+.row .mini svg{width:22px;height:22px}
+.row .t{min-width:0;flex:1}
+.row .t b{display:block;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .t span{font-size:12.5px;color:var(--muted)}
+.empty{color:var(--muted);padding:18px;text-align:center}
+
+/* Barre de filtres */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);
+  margin-inline:-6px;padding:10px 6px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-weight:700;font-size:13.5px;cursor:pointer;color:var(--ink)}
+.chip svg{width:16px;height:16px;color:var(--c,var(--accent))}
+.chip .n{font-size:12px;color:var(--muted);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--c,var(--accent));border-color:var(--c,var(--accent));color:var(--accent-ink)}
+.chip[aria-pressed="true"] svg,.chip[aria-pressed="true"] .n{color:inherit}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.search{flex:1 1 220px;min-width:0}
+.search input{width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px}
+.sw{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;cursor:pointer;user-select:none}
+.sw input{accent-color:var(--accent);width:17px;height:17px}
+.seg{display:inline-flex;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:9px;font-weight:700;font-size:13.5px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+
+/* Cartes */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px}
+.day{font:600 15px var(--display);color:var(--muted);grid-column:1/-1;margin-top:8px;text-transform:capitalize}
+.ev{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;cursor:pointer;
+  transition:transform .15s ease,box-shadow .15s ease;text-align:left;padding:0;color:var(--ink)}
+.ev:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.ev.live{border-color:color-mix(in srgb,var(--live) 50%,var(--line))}
+.art{position:relative;height:118px;display:flex;align-items:flex-end;justify-content:center;padding:6px 10px 0;
+  background:radial-gradient(120% 90% at 50% 100%,color-mix(in srgb,var(--c) 26%,var(--surface)),color-mix(in srgb,var(--c) 8%,var(--surface)))}
+.art img{height:112px;width:auto;margin-inline:-14px;filter:drop-shadow(0 6px 10px rgb(0 0 0/.16))}
+.art .ico{width:64px;height:64px;color:var(--c);align-self:center;opacity:.9}
+.art .more{position:absolute;bottom:8px;right:10px;font-size:12px;font-weight:800;background:var(--surface);border-radius:999px;padding:2px 8px;color:var(--muted)}
+.art .ring{position:absolute;top:10px;right:10px}
+.art .tag{position:absolute;top:10px;left:10px}
+.tag{display:inline-flex;align-items:center;gap:6px;background:var(--surface);color:var(--c);border-radius:999px;padding:4px 10px 4px 7px;font-weight:800;font-size:12px}
+.tag svg{width:15px;height:15px}
+.ev .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.ev h3{font-size:17.5px;line-height:1.2}
+.when{font-size:13.5px;color:var(--muted)}
+.when b{color:var(--ink);font-weight:700}
+.st{align-self:flex-start;font-size:12px;font-weight:800;border-radius:999px;padding:3px 9px;background:var(--sunk);color:var(--muted)}
+.st.live{background:color-mix(in srgb,var(--live) 14%,var(--surface));color:var(--live)}
+.st.soon{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent)}
+.icons{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+.icons img{width:26px;height:26px;image-rendering:pixelated;background:var(--sunk);border-radius:8px;padding:1px}
+.ring{--p:50;--col:var(--mid);width:50px;height:50px;border-radius:50%;display:grid;place-items:center;flex:none;
+  background:conic-gradient(var(--col) calc(var(--p)*1%),color-mix(in srgb,var(--col) 16%,var(--surface)) 0)}
+.ring span{width:40px;height:40px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:700 14px var(--display)}
+.ring.lg{width:66px;height:66px}.ring.lg span{width:54px;height:54px;font-size:18px}
+
+/* Semaine */
+.wk-head{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.wk-head h2{font-size:20px}
+.wk-nav{display:flex;gap:6px}
+.btn{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px;font-weight:700;cursor:pointer}
+.long{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.long h3{font-size:14px;color:var(--muted);font-family:var(--body);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.span{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.span button{min-width:0;border:0;border-radius:8px;padding:5px 9px;font-weight:700;font-size:12.5px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:color-mix(in srgb,var(--c) 18%,var(--surface));color:var(--ink)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.col{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 8px;min-height:160px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.col.today{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.col h4{margin:0 0 4px;font:600 14px var(--display);text-transform:capitalize}
+.col h4 small{display:block;font:600 12px var(--body);color:var(--muted)}
+.slot{border:0;text-align:left;border-radius:10px;padding:6px 7px;cursor:pointer;display:flex;flex-direction:column;gap:2px;
+  background:color-mix(in srgb,var(--c) 13%,var(--surface));color:var(--ink);min-width:0}
+.slot time{font-size:12px;font-weight:800;color:var(--c)}
+.slot b{font-size:12.5px;line-height:1.25;font-weight:700;overflow-wrap:anywhere}
+.slot .sp{display:flex;margin-top:2px}.slot .sp img{width:30px;height:30px;margin-right:-6px}
+@media (max-width:860px){.cal{grid-template-columns:minmax(0,1fr)}.col{min-height:0}.span{grid-template-columns:minmax(0,1fr)}.span button{grid-column:auto!important}}
+
+/* Fiche détail */
+dialog{border:0;padding:0;border-radius:24px;width:min(760px,calc(100vw - 24px));max-height:calc(100dvh - 24px);background:var(--surface);color:var(--ink);box-shadow:0 30px 80px rgb(0 0 0/.35)}
+dialog::backdrop{background:rgb(8 22 27/.55);backdrop-filter:blur(3px)}
+.dh{position:relative;padding:22px 22px 18px;background:linear-gradient(135deg,color-mix(in srgb,var(--c) 22%,var(--surface)),color-mix(in srgb,var(--c) 5%,var(--surface)));display:flex;gap:16px;align-items:flex-start}
+.dh .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.dh h2{font-size:clamp(21px,3.4vw,28px);line-height:1.12;padding-right:34px}
+.x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:var(--surface);font-size:20px;cursor:pointer;line-height:1}
+.db{padding:18px 22px 24px;display:flex;flex-direction:column;gap:20px}
+.db h3{font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.db h3 small{font:600 12.5px var(--body);color:var(--muted)}
+.time{background:var(--sunk);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.mode{align-self:flex-start;font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px}
+.mode.fr{background:color-mix(in srgb,var(--good) 16%,var(--surface));color:var(--good)}
+.mode.local{background:color-mix(in srgb,var(--mid) 18%,var(--surface));color:var(--mid)}
+.mode.city{background:color-mix(in srgb,var(--raid) 15%,var(--surface));color:var(--raid)}
+.alt{color:var(--muted);font-size:13px}
+.world{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.wrow{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 10px;align-items:center;font-size:12.5px}
+.wrow .lbl{font-weight:700}
+.wrow.me .lbl{color:var(--accent)}
+.track{position:relative;height:12px;border-radius:6px;background:color-mix(in srgb,var(--line) 70%,var(--surface))}
+.track .b{position:absolute;top:0;bottom:0;border-radius:6px;background:var(--mid)}
+.wrow.me .track .b{background:var(--accent)}
+.track .now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--live)}
+.wrow .hrs{grid-column:2;color:var(--muted);font-size:11.5px;margin-top:-3px}
+.mons{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.mon{position:relative;border:1.5px solid var(--line);border-radius:16px;padding:8px 8px 10px;background:var(--sunk);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default;text-align:center;color:var(--ink)}
+.mon.can{cursor:pointer}
+.mon img{width:96px;height:96px;object-fit:contain;transition:transform .2s ease}
+.mon.can:hover img{transform:scale(1.06) rotate(-3deg)}
+.mon b{font-size:13px;line-height:1.2;font-weight:700}
+.mon .sh{position:absolute;top:6px;right:6px;font-size:11px;font-weight:800;color:var(--star);background:var(--surface);border-radius:999px;padding:1px 7px}
+.mon.on{border-color:var(--star);background:color-mix(in srgb,var(--star) 10%,var(--sunk))}
+.bons{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:8px}
+.bons li{display:flex;align-items:center;gap:10px;background:var(--sunk);border-radius:12px;padding:8px 10px;font-size:13.5px;line-height:1.35}
+.bons img{width:34px;height:34px;image-rendering:pixelated;flex:none}
+.cta{align-self:flex-start;display:inline-flex;gap:6px;align-items:center;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:800;border-radius:12px;padding:10px 16px}
+/* Images d'événements et noms des Pokémon */
+.art.ban{height:150px;padding:0;background:var(--sunk)}
+.art .banner{width:100%;height:100%;object-fit:cover;margin:0;filter:none}
+.who{display:flex;flex-wrap:wrap;gap:6px}
+.who span{display:inline-flex;align-items:center;gap:5px;background:color-mix(in srgb,var(--c) 10%,var(--sunk));border-radius:999px;padding:2px 10px 2px 2px;font-size:12.5px;font-weight:700;max-width:100%}
+.who img{width:32px;height:32px;border-radius:50%;background:var(--surface);object-fit:contain;flex:none}
+.who .plus{padding:2px 10px;color:var(--muted)}
+.feature.has-ban{grid-template-columns:minmax(0,1fr)}
+.feature .fban{width:100%;aspect-ratio:16/6;object-fit:cover;border-radius:16px;display:block}
+.row .mini.ban{width:64px;background:none}
+.row .mini.ban img{width:64px;height:40px;object-fit:cover;border-radius:10px}
+.dban{display:block;width:100%;aspect-ratio:16/7;max-height:300px;object-fit:cover}
+@media (max-width:560px){
+  .clock{align-items:flex-start;text-align:left;flex-direction:row;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .clock b{font-size:20px}
+  .feature{padding:14px;min-height:0;border-radius:20px}
+  .side{padding:14px;border-radius:20px}
+  .art.ban{height:170px}
+  .dh{padding:16px}.db{padding:16px 16px 20px}
+  .mons{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .mon img{width:80px;height:80px}
+}
+footer{color:var(--muted);font-size:12.5px;text-align:center;padding-top:10px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
+
 </head>
 <body>
 <div class="wrap">
-  <header>
+  <header class="top">
     <div class="brand">
       <div class="radar" aria-hidden="true"></div>
-      <div><h1>Radar GO</h1><div class="sub" id="updated">Chargement des événements…</div></div>
+      <div><h1>Radar GO</h1><p>Les événements Pokémon GO, traduits et à l'heure française</p></div>
     </div>
-    <div class="chips" role="group" aria-label="Filtres">
-      <button class="chip" id="f-all" data-f="all" aria-pressed="true">Tout</button>
-      <button class="chip" id="f-top" data-f="top" aria-pressed="false">Vaut le coup ≥ 70 %</button>
-      <button class="chip" id="f-live" data-f="live" aria-pressed="false">En cours</button>
-      <button class="chip" id="f-week" data-f="week" aria-pressed="false">7 prochains jours</button>
-      <button class="chip" id="f-raid" data-f="raid" aria-pressed="false">Raids</button>
-    </div>
+    <div class="clock"><b id="clock" class="num">--:--</b><small id="upd">Chargement…</small></div>
   </header>
 
-  <h2>À ne pas rater</h2>
-  <div class="top" id="top"><div class="empty">Les meilleurs événements à venir apparaîtront ici.</div></div>
+  <section class="hero" id="hero" aria-label="À ne pas rater"></section>
 
-  <h2 id="list-title">Tous les événements</h2>
-  <div class="list" id="list"><div class="empty">Chargement des événements…</div></div>
-
-  <div class="legend">
-    <div>Toutes les heures sont données <b>à l'heure française</b> (Paris).</div>
-    <div><b>Même moment partout</b> : l'événement commence au même instant dans le monde entier.</div>
-    <div><b>Heure locale dans chaque pays</b> : 14h à Paris, 14h à Tokyo… Ouvre « horaires dans le monde » pour voir quand ça se passe ailleurs, en heure française.</div>
-    <div><b>Sur place</b> : événement dans une ville, avec l'heure de la ville et son équivalent en France.</div>
-    <div>✨ = peut être chromatique (shiny).</div>
-    <div>Score « vaut le coup » : estimation selon le type d'événement, les shiny, les bonus et les spawns. Source : LeekDuck via ScrapedDuck, noms français via PokeAPI. Mis à jour toutes les heures par GitHub.</div>
+  <div class="bar">
+    <div class="chips" id="chips" aria-label="Catégories"></div>
+    <div class="tools">
+      <label class="search"><input id="q" type="search" placeholder="Chercher un Pokémon ou un événement…" aria-label="Rechercher"></label>
+      <label class="sw"><input type="checkbox" id="hotOnly"> Vaut le coup ≥ 70 %</label>
+      <label class="sw"><input type="checkbox" id="shinyAll"> Voir les shiny ✨</label>
+      <div class="seg" role="group" aria-label="Vue">
+        <button type="button" id="vList" data-view="list" aria-pressed="true">Liste</button>
+        <button type="button" id="vWeek" data-view="week" aria-pressed="false">Semaine</button>
+      </div>
+    </div>
   </div>
+
+  <main id="list" class="grid"></main>
+  <section id="week" hidden></section>
+
+  <footer>Événements : LeekDuck, traduits par Radar GO. Images : PokeAPI. Toutes les heures sont celles de Paris.</footer>
 </div>
+<dialog id="dlg" aria-label="Détails de l'événement"></dialog>
 
 <script>
+const FEED_FALLBACK = null;  // les données viennent de feed.json, mis à jour toutes les heures
+const FRDEX = {"Bulbizarre":1,"Herbizarre":2,"Florizarre":3,"Salamèche":4,"Reptincel":5,"Dracaufeu":6,"Carapuce":7,"Carabaffe":8,"Tortank":9,"Chenipan":10,"Chrysacier":11,"Papilusion":12,"Aspicot":13,"Coconfort":14,"Dardargnan":15,"Roucool":16,"Roucoups":17,"Roucarnage":18,"Rattata":19,"Rattatac":20,"Piafabec":21,"Rapasdepic":22,"Abo":23,"Arbok":24,"Pikachu":25,"Raichu":26,"Sabelette":27,"Sablaireau":28,"Nidoran♀":29,"Nidorina":30,"Nidoqueen":31,"Nidoran♂":32,"Nidorino":33,"Nidoking":34,"Mélofée":35,"Mélodelfe":36,"Goupix":37,"Feunard":38,"Rondoudou":39,"Grodoudou":40,"Nosferapti":41,"Nosferalto":42,"Mystherbe":43,"Ortide":44,"Rafflesia":45,"Paras":46,"Parasect":47,"Mimitoss":48,"Aéromite":49,"Taupiqueur":50,"Triopikeur":51,"Miaouss":52,"Persian":53,"Psykokwak":54,"Akwakwak":55,"Férosinge":56,"Colossinge":57,"Caninos":58,"Arcanin":59,"Ptitard":60,"Têtarte":61,"Tartard":62,"Abra":63,"Kadabra":64,"Alakazam":65,"Machoc":66,"Machopeur":67,"Mackogneur":68,"Chétiflor":69,"Boustiflor":70,"Empiflor":71,"Tentacool":72,"Tentacruel":73,"Racaillou":74,"Gravalanch":75,"Grolem":76,"Ponyta":77,"Galopa":78,"Ramoloss":79,"Flagadoss":80,"Magnéti":81,"Magnéton":82,"Canarticho":83,"Doduo":84,"Dodrio":85,"Otaria":86,"Lamantine":87,"Tadmorv":88,"Grotadmorv":89,"Kokiyas":90,"Crustabri":91,"Fantominus":92,"Spectrum":93,"Ectoplasma":94,"Onix":95,"Soporifik":96,"Hypnomade":97,"Krabby":98,"Krabboss":99,"Voltorbe":100,"Électrode":101,"Noeunoeuf":102,"Noadkoko":103,"Osselait":104,"Ossatueur":105,"Kicklee":106,"Tygnon":107,"Excelangue":108,"Smogo":109,"Smogogo":110,"Rhinocorne":111,"Rhinoféros":112,"Leveinard":113,"Saquedeneu":114,"Kangourex":115,"Hypotrempe":116,"Hypocéan":117,"Poissirène":118,"Poissoroy":119,"Stari":120,"Staross":121,"M. Mime":122,"Insécateur":123,"Lippoutou":124,"Élektek":125,"Magmar":126,"Scarabrute":127,"Tauros":128,"Magicarpe":129,"Léviator":130,"Lokhlass":131,"Métamorph":132,"Évoli":133,"Aquali":134,"Voltali":135,"Pyroli":136,"Porygon":137,"Amonita":138,"Amonistar":139,"Kabuto":140,"Kabutops":141,"Ptéra":142,"Ronflex":143,"Artikodin":144,"Électhor":145,"Sulfura":146,"Minidraco":147,"Draco":148,"Dracolosse":149,"Mewtwo":150,"Mew":151,"Germignon":152,"Macronium":153,"Méganium":154,"Héricendre":155,"Feurisson":156,"Typhlosion":157,"Kaiminus":158,"Crocrodil":159,"Aligatueur":160,"Fouinette":161,"Fouinar":162,"Hoothoot":163,"Noarfang":164,"Coxy":165,"Coxyclaque":166,"Mimigal":167,"Migalos":168,"Nostenfer":169,"Loupio":170,"Lanturn":171,"Pichu":172,"Mélo":173,"Toudoudou":174,"Togepi":175,"Togetic":176,"Natu":177,"Xatu":178,"Wattouat":179,"Lainergie":180,"Pharamp":181,"Joliflor":182,"Marill":183,"Azumarill":184,"Simularbre":185,"Tarpaud":186,"Granivol":187,"Floravol":188,"Cotovol":189,"Capumain":190,"Tournegrin":191,"Héliatronc":192,"Yanma":193,"Axoloto":194,"Maraiste":195,"Mentali":196,"Noctali":197,"Cornèbre":198,"Roigada":199,"Feuforêve":200,"Zarbi":201,"Qulbutoké":202,"Girafarig":203,"Pomdepik":204,"Foretress":205,"Insolourdo":206,"Scorplane":207,"Steelix":208,"Snubbull":209,"Granbull":210,"Qwilfish":211,"Cizayox":212,"Caratroc":213,"Scarhino":214,"Farfuret":215,"Teddiursa":216,"Ursaring":217,"Limagma":218,"Volcaropod":219,"Marcacrin":220,"Cochignon":221,"Corayon":222,"Rémoraid":223,"Octillery":224,"Cadoizo":225,"Démanta":226,"Airmure":227,"Malosse":228,"Démolosse":229,"Hyporoi":230,"Phanpy":231,"Donphan":232,"Porygon2":233,"Cerfrousse":234,"Queulorior":235,"Debugant":236,"Kapoera":237,"Lippouti":238,"Élekid":239,"Magby":240,"Écrémeuh":241,"Leuphorie":242,"Raikou":243,"Entei":244,"Suicune":245,"Embrylex":246,"Ymphect":247,"Tyranocif":248,"Lugia":249,"Ho-Oh":250,"Celebi":251,"Arcko":252,"Massko":253,"Jungko":254,"Poussifeu":255,"Galifeu":256,"Braségali":257,"Gobou":258,"Flobio":259,"Laggron":260,"Medhyèna":261,"Grahyèna":262,"Zigzaton":263,"Linéon":264,"Chenipotte":265,"Armulys":266,"Charmillon":267,"Blindalys":268,"Papinox":269,"Nénupiot":270,"Lombre":271,"Ludicolo":272,"Grainipiot":273,"Pifeuil":274,"Tengalice":275,"Nirondelle":276,"Hélédelle":277,"Goélise":278,"Bekipan":279,"Tarsal":280,"Kirlia":281,"Gardevoir":282,"Arakdo":283,"Maskadra":284,"Balignon":285,"Chapignon":286,"Parecool":287,"Vigoroth":288,"Monaflèmit":289,"Ningale":290,"Ninjask":291,"Munja":292,"Chuchmur":293,"Ramboum":294,"Brouhabam":295,"Makuhita":296,"Hariyama":297,"Azurill":298,"Tarinor":299,"Skitty":300,"Delcatty":301,"Ténéfix":302,"Mysdibule":303,"Galekid":304,"Galegon":305,"Galeking":306,"Méditikka":307,"Charmina":308,"Dynavolt":309,"Élecsprint":310,"Posipi":311,"Négapi":312,"Muciole":313,"Lumivole":314,"Rosélia":315,"Gloupti":316,"Avaltout":317,"Carvanha":318,"Sharpedo":319,"Wailmer":320,"Wailord":321,"Chamallot":322,"Camérupt":323,"Chartor":324,"Spoink":325,"Groret":326,"Spinda":327,"Kraknoix":328,"Vibraninf":329,"Libégon":330,"Cacnea":331,"Cacturne":332,"Tylton":333,"Altaria":334,"Mangriff":335,"Séviper":336,"Séléroc":337,"Solaroc":338,"Barloche":339,"Barbicha":340,"Écrapince":341,"Colhomard":342,"Balbuto":343,"Kaorine":344,"Lilia":345,"Vacilys":346,"Anorith":347,"Armaldo":348,"Barpau":349,"Milobellus":350,"Morphéo":351,"Kecleon":352,"Polichombr":353,"Branette":354,"Skelénox":355,"Téraclope":356,"Tropius":357,"Éoko":358,"Absol":359,"Okéoké":360,"Stalgamin":361,"Oniglali":362,"Obalie":363,"Phogleur":364,"Kaimorse":365,"Coquiperl":366,"Serpang":367,"Rosabyss":368,"Relicanth":369,"Lovdisc":370,"Draby":371,"Drackhaus":372,"Drattak":373,"Terhal":374,"Métang":375,"Métalosse":376,"Regirock":377,"Regice":378,"Registeel":379,"Latias":380,"Latios":381,"Kyogre":382,"Groudon":383,"Rayquaza":384,"Jirachi":385,"Deoxys":386,"Tortipouss":387,"Boskara":388,"Torterra":389,"Ouisticram":390,"Chimpenfeu":391,"Simiabraz":392,"Tiplouf":393,"Prinplouf":394,"Pingoléon":395,"Étourmi":396,"Étourvol":397,"Étouraptor":398,"Keunotor":399,"Castorno":400,"Crikzik":401,"Mélokrik":402,"Lixy":403,"Luxio":404,"Luxray":405,"Rozbouton":406,"Roserade":407,"Kranidos":408,"Charkos":409,"Dinoclier":410,"Bastiodon":411,"Cheniti":412,"Cheniselle":413,"Papilord":414,"Apitrini":415,"Apireine":416,"Pachirisu":417,"Mustébouée":418,"Mustéflott":419,"Ceribou":420,"Ceriflor":421,"Sancoki":422,"Tritosor":423,"Capidextre":424,"Baudrive":425,"Grodrive":426,"Laporeille":427,"Lockpin":428,"Magirêve":429,"Corboss":430,"Chaglam":431,"Chaffreux":432,"Korillon":433,"Moufouette":434,"Moufflair":435,"Archéomire":436,"Archéodong":437,"Manzaï":438,"Mime Jr.":439,"Ptiravi":440,"Pijako":441,"Spiritomb":442,"Griknot":443,"Carmache":444,"Carchacrok":445,"Goinfrex":446,"Riolu":447,"Lucario":448,"Hippopotas":449,"Hippodocus":450,"Rapion":451,"Drascore":452,"Cradopaud":453,"Coatox":454,"Vortente":455,"Écayon":456,"Luminéon":457,"Babimanta":458,"Blizzi":459,"Blizzaroi":460,"Dimoret":461,"Magnézone":462,"Coudlangue":463,"Rhinastoc":464,"Bouldeneu":465,"Élekable":466,"Maganon":467,"Togekiss":468,"Yanmega":469,"Phyllali":470,"Givrali":471,"Scorvol":472,"Mammochon":473,"Porygon-Z":474,"Gallame":475,"Tarinorme":476,"Noctunoir":477,"Momartik":478,"Motisma":479,"Créhelf":480,"Créfollet":481,"Créfadet":482,"Dialga":483,"Palkia":484,"Heatran":485,"Regigigas":486,"Giratina":487,"Cresselia":488,"Phione":489,"Manaphy":490,"Darkrai":491,"Shaymin":492,"Arceus":493,"Victini":494,"Vipélierre":495,"Lianaja":496,"Majaspic":497,"Gruikui":498,"Grotichon":499,"Roitiflam":500,"Moustillon":501,"Mateloutre":502,"Clamiral":503,"Ratentif":504,"Miradar":505,"Ponchiot":506,"Ponchien":507,"Mastouffe":508,"Chacripan":509,"Léopardus":510,"Feuillajou":511,"Feuiloutan":512,"Flamajou":513,"Flamoutan":514,"Flotajou":515,"Flotoutan":516,"Munna":517,"Mushana":518,"Poichigeon":519,"Colombeau":520,"Déflaisan":521,"Zébibron":522,"Zéblitz":523,"Nodulithe":524,"Géolithe":525,"Gigalithe":526,"Chovsourir":527,"Rhinolove":528,"Rototaupe":529,"Minotaupe":530,"Nanméouïe":531,"Charpenti":532,"Ouvrifier":533,"Bétochef":534,"Tritonde":535,"Batracné":536,"Crapustule":537,"Judokrak":538,"Karaclée":539,"Larveyette":540,"Couverdure":541,"Manternel":542,"Venipatte":543,"Scobolide":544,"Brutapode":545,"Doudouvet":546,"Farfaduvet":547,"Chlorobule":548,"Fragilady":549,"Bargantua":550,"Mascaïman":551,"Escroco":552,"Crocorible":553,"Darumarond":554,"Darumacho":555,"Maracachi":556,"Crabicoque":557,"Crabaraque":558,"Baggiguane":559,"Baggaïd":560,"Cryptéro":561,"Tutafeh":562,"Tutankafer":563,"Carapagos":564,"Mégapagos":565,"Arkéapti":566,"Aéroptéryx":567,"Miamiasme":568,"Miasmax":569,"Zorua":570,"Zoroark":571,"Chinchidou":572,"Pashmilla":573,"Scrutella":574,"Mesmérella":575,"Sidérella":576,"Nucléos":577,"Méios":578,"Symbios":579,"Couaneton":580,"Lakmécygne":581,"Sorbébé":582,"Sorboul":583,"Sorbouboul":584,"Vivaldaim":585,"Haydaim":586,"Emolga":587,"Carabing":588,"Lançargot":589,"Trompignon":590,"Gaulet":591,"Viskuse":592,"Moyade":593,"Mamanbo":594,"Statitik":595,"Mygavolt":596,"Grindur":597,"Noacier":598,"Tic":599,"Clic":600,"Cliticlic":601,"Anchwatt":602,"Lampéroie":603,"Ohmassacre":604,"Lewsor":605,"Neitram":606,"Funécire":607,"Mélancolux":608,"Lugulabre":609,"Coupenotte":610,"Incisache":611,"Tranchodon":612,"Polarhume":613,"Polagriffe":614,"Hexagel":615,"Escargaume":616,"Limaspeed":617,"Limonde":618,"Kungfouine":619,"Shaofouine":620,"Drakkarmin":621,"Gringolem":622,"Golemastoc":623,"Scalpion":624,"Scalproie":625,"Frison":626,"Furaiglon":627,"Gueriaigle":628,"Vostourno":629,"Vaututrice":630,"Aflamanoir":631,"Fermite":632,"Solochi":633,"Diamat":634,"Trioxhydre":635,"Pyronille":636,"Pyrax":637,"Cobaltium":638,"Terrakium":639,"Viridium":640,"Boréas":641,"Fulguris":642,"Reshiram":643,"Zekrom":644,"Démétéros":645,"Kyurem":646,"Keldeo":647,"Meloetta":648,"Genesect":649,"Marisson":650,"Boguérisse":651,"Blindépique":652,"Feunnec":653,"Roussil":654,"Goupelin":655,"Grenousse":656,"Croâporal":657,"Amphinobi":658,"Sapereau":659,"Excavarenne":660,"Passerouge":661,"Braisillon":662,"Flambusard":663,"Lépidonille":664,"Pérégrain":665,"Prismillon":666,"Hélionceau":667,"Némélios":668,"Flabébé":669,"Floette":670,"Florges":671,"Cabriolaine":672,"Chevroum":673,"Pandespiègle":674,"Pandarbare":675,"Couafarel":676,"Psystigri":677,"Mistigrix":678,"Monorpale":679,"Dimoclès":680,"Exagide":681,"Fluvetin":682,"Cocotine":683,"Sucroquin":684,"Cupcanaille":685,"Sepiatop":686,"Sepiatroce":687,"Opermine":688,"Golgopathe":689,"Venalgue":690,"Kravarech":691,"Flingouste":692,"Gamblast":693,"Galvaran":694,"Iguolta":695,"Ptyranidur":696,"Rexillius":697,"Amagara":698,"Dragmara":699,"Nymphali":700,"Brutalibré":701,"Dedenne":702,"Strassie":703,"Mucuscule":704,"Colimucus":705,"Muplodocus":706,"Trousselin":707,"Brocélôme":708,"Desséliande":709,"Pitrouille":710,"Banshitrouye":711,"Grelaçon":712,"Séracrawl":713,"Sonistrelle":714,"Bruyverne":715,"Xerneas":716,"Yveltal":717,"Zygarde":718,"Diancie":719,"Hoopa":720,"Volcanion":721,"Brindibou":722,"Efllèche":723,"Archéduc":724,"Flamiaou":725,"Matoufeu":726,"Félinferno":727,"Otaquin":728,"Otarlette":729,"Oratoria":730,"Picassaut":731,"Piclairon":732,"Bazoucan":733,"Manglouton":734,"Argouste":735,"Larvibule":736,"Chrysapile":737,"Lucanon":738,"Crabagarre":739,"Crabominable":740,"Plumeline":741,"Bombydou":742,"Rubombelle":743,"Rocabot":744,"Lougaroc":745,"Froussardine":746,"Vorastérie":747,"Prédastérie":748,"Tiboudet":749,"Bourrinos":750,"Araqua":751,"Tarenbulle":752,"Mimantis":753,"Floramantis":754,"Spododo":755,"Lampignon":756,"Tritox":757,"Malamandre":758,"Nounourson":759,"Chelours":760,"Croquine":761,"Candine":762,"Sucreine":763,"Guérilande":764,"Gouroutan":765,"Quartermac":766,"Sovkipou":767,"Sarmuraï":768,"Bacabouh":769,"Trépassable":770,"Concombaffe":771,"Type:0":772,"Silvallié":773,"Météno":774,"Dodoala":775,"Boumata":776,"Togedemaru":777,"Mimiqui":778,"Denticrisse":779,"Draïeul":780,"Sinistrail":781,"Bébécaille":782,"Écaïd":783,"Ékaïser":784,"Tokorico":785,"Tokopiyon":786,"Tokotoro":787,"Tokopisco":788,"Cosmog":789,"Cosmovum":790,"Solgaleo":791,"Lunala":792,"Zéroïd":793,"Mouscoto":794,"Cancrelove":795,"Câblifère":796,"Bamboiselle":797,"Katagami":798,"Engloutyran":799,"Necrozma":800,"Magearna":801,"Marshadow":802,"Vémini":803,"Mandrillon":804,"Ama-Ama":805,"Pierroteknik":806,"Zeraora":807,"Meltan":808,"Melmetal":809,"Ouistempo":810,"Badabouin":811,"Gorythmic":812,"Flambino":813,"Lapyro":814,"Pyrobut":815,"Larméléon":816,"Arrozard":817,"Lézargus":818,"Rongourmand":819,"Rongrigou":820,"Minisange":821,"Bleuseille":822,"Corvaillus":823,"Larvadar":824,"Coléodôme":825,"Astronelle":826,"Goupilou":827,"Roublenard":828,"Tournicoton":829,"Blancoton":830,"Moumouton":831,"Moumouflon":832,"Khélocrok":833,"Torgamord":834,"Voltoutou":835,"Fulgudog":836,"Charbi":837,"Wagomine":838,"Monthracite":839,"Verpom":840,"Pomdrapi":841,"Dratatin":842,"Dunaja":843,"Dunaconda":844,"Nigosier":845,"Embrochet":846,"Hastacuda":847,"Toxizap":848,"Salarsen":849,"Grillepattes":850,"Scolocendre":851,"Poulpaf":852,"Krakos":853,"Théffroi":854,"Polthégeist":855,"Bibichut":856,"Chapotus":857,"Sorcilence":858,"Grimalin":859,"Fourbelin":860,"Angoliath":861,"Ixon":862,"Berserkatt":863,"Corayôme":864,"Palarticho":865,"M. Glaquette":866,"Tutétékri":867,"Crèmy":868,"Charmilly":869,"Hexadron":870,"Wattapik":871,"Frissonille":872,"Beldeneige":873,"Dolman":874,"Bekaglaçon":875,"Wimessir":876,"Morpeko":877,"Charibari":878,"Pachyradjah":879,"Galvagon":880,"Galvagla":881,"Hydragon":882,"Hydragla":883,"Duralugon":884,"Fantyrm":885,"Dispareptil":886,"Lanssorien":887,"Zacian":888,"Zamazenta":889,"Éthernatos":890,"Wushours":891,"Shifours":892,"Zarude":893,"Regieleki":894,"Regidrago":895,"Blizzeval":896,"Spectreval":897,"Sylveroy":898,"Cerbyllin":899,"Hachécateur":900,"Ursaking":901,"Paragruel":902,"Farfurex":903,"Qwilpik":904,"Amovénus":905,"Poussacha":906,"Matourgeon":907,"Miascarade":908,"Chochodile":909,"Crocogril":910,"Flâmigator":911,"Coiffeton":912,"Canarbello":913,"Palmaval":914,"Gourmelet":915,"Fragroin":916,"Tissenboule":917,"Filentrappe":918,"Lilliterelle":919,"Gambex":920,"Pohm":921,"Pohmotte":922,"Pohmarmotte":923,"Compagnol":924,"Famignol":925,"Pâtachiot":926,"Briochien":927,"Olivini":928,"Olivado":929,"Arboliva":930,"Tapatoès":931,"Selutin":932,"Amassel":933,"Gigansel":934,"Charbambin":935,"Carmadura":936,"Malvalame":937,"Têtampoule":938,"Ampibidou":939,"Zapétrel":940,"Fulgulairo":941,"Grondogue":942,"Dogrino":943,"Gribouraigne":944,"Tag-Tag":945,"Virovent":946,"Virevorreur":947,"Terracool":948,"Terracruel":949,"Craparoi":950,"Pimito":951,"Scovilain":952,"Léboulérou":953,"Bérasca":954,"Flotillon":955,"Cléopsytra":956,"Forgerette":957,"Forgella":958,"Forgelina":959,"Taupikeau":960,"Triopikeau":961,"Lestombaile":962,"Dofin":963,"Superdofin":964,"Vrombi":965,"Vrombotor":966,"Motorizard":967,"Ferdeter":968,"Germéclat":969,"Floréclat":970,"Toutombe":971,"Tomberro":972,"Flamenroule":973,"Piétacé":974,"Balbalèze":975,"Délestin":976,"Oyacata":977,"Nigirigon":978,"Courrousinge":979,"Terraiste":980,"Farigiraf":981,"Deusolourdo":982,"Scalpereur":983,"Fort-Ivoire":984,"Hurle-Queue":985,"Fongus-Furie":986,"Flotte-Mèche":987,"Rampe-Ailes":988,"Pelage-Sablé":989,"Roue-de-Fer":990,"Hotte-de-Fer":991,"Paume-de-Fer":992,"Têtes-de-Fer":993,"Mite-de-Fer":994,"Épine-de-Fer":995,"Frigodo":996,"Cryodo":997,"Glaivodo":998,"Mordudor":999,"Gromago":1000,"Chongjian":1001,"Baojian":1002,"Dinglu":1003,"Yuyu":1004,"Rugit-Lune":1005,"Garde-de-Fer":1006,"Koraidon":1007,"Miraidon":1008,"Serpente-Eau":1009,"Vert-de-Fer":1010,"Pomdramour":1011,"Poltchageist":1012,"Théffroyable":1013,"Félicanis":1014,"Fortusimia":1015,"Favianos":1016,"Ogerpon":1017,"Pondralugon":1018,"Pomdorochi":1019,"Feu-Perçant":1020,"Ire-Foudre":1021,"Roc-de-Fer":1022,"Chef-de-Fer":1023,"Terapagos":1024,"Pêchaminus":1025};
+const SPR = { mon: {}, shiny: {}, item: {}, banner: {} };  // images chargées en ligne (PokeAPI, LeekDuck)
+const RAW = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/";
+
 const $ = s => document.querySelector(s);
-let events = [], filter = "all";
-try { filter = localStorage.getItem("radar-filter") || "all"; } catch (e) {}
+const norm = s => s.toLowerCase().normalize("NFC").trim();
+const DEX = {}; for (const k in FRDEX) DEX[norm(k)] = FRDEX[k];
+function baseName(n) {
+  n = n.replace(/^(Méga|Mega|Primo|Obscur|Shadow)[- ]/, "");
+  return norm(n.split(/ avec | \(| Gigamax| Dynamax| [XY]$/)[0]);
+}
+const dexOf = name => DEX[baseName(name)] || null;
+function art(id, shiny) {
+  if (!id) return null;
+  return (SPR[shiny ? "shiny" : "mon"] || {})[id] || `${RAW}pokemon/other/official-artwork/${shiny ? "shiny/" : ""}${id}.png`;
+}
+const itemSrc = k => SPR.item[k] || `${RAW}items/${k}.png`;
+
+const ICON = {
+  raid: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8 2 5 8.5 5 13.5 5 18 8 22 12 22s7-4 7-8.5C19 8.5 16 2 12 2z" fill="currentColor"/><path d="M5.3 12.5h13.4" style="stroke:var(--surface)" stroke-width="2"/><circle cx="12" cy="12.5" r="2.7" style="fill:var(--surface)" stroke="currentColor" stroke-width="1.6"/></svg>',
+  dyna: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 6.4L21 6l-3 6 3 6-6.4-1.4L12 23l-2.6-6.4L3 18l3-6-3-6 6.4 1.4z" fill="currentColor"/><circle cx="12" cy="12" r="3" style="fill:var(--surface)"/></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 6.6 7 .8-5.2 4.8 1.5 7L12 17.6l-6.3 3.6 1.5-7L2 9.4l7-.8z" fill="currentColor"/></svg>',
+  event: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3" fill="currentColor"/><path d="M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 9.5l1.3 3 3 1.2-3 1.3L12 18l-1.3-3-3-1.3 3-1.2z" style="fill:var(--surface)"/></svg>',
+  league: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5z" fill="currentColor"/><path d="M8.5 12.2l2.5 2.5 4.5-5" style="stroke:var(--surface)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  other: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4z" fill="currentColor"/><path d="M14 6v12" style="stroke:var(--surface)" stroke-width="1.6" stroke-dasharray="2 2"/></svg>',
+  all: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M3 12h18" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="3" style="fill:var(--surface)" stroke="currentColor" stroke-width="2.2"/></svg>'
+};
+const CATS = {
+  all:    { label: "Tout",               color: "var(--accent)" },
+  raid:   { label: "Raids",              color: "var(--raid)" },
+  dyna:   { label: "Dynamax",            color: "var(--dyna)" },
+  star:   { label: "Journées & Vedettes", color: "var(--star)" },
+  event:  { label: "Événements",         color: "var(--event)" },
+  league: { label: "Ligue de Combat",    color: "var(--league)" },
+  other:  { label: "Pass & Twitch",      color: "var(--other)" }
+};
+function cat(e) {
+  const k = e.typeKey || "";
+  if (/^raid/.test(k)) return "raid";
+  if (/max|wild-area/.test(k)) return "dyna";
+  if (/community|spotlight/.test(k)) return "star";
+  if (/battle-league/.test(k)) return "league";
+  if (/go-pass|twitch/.test(k)) return "other";
+  return "event";
+}
+
+// Icône d'objet du jeu pour chaque bonus
+const BONUS_ICONS = [
+  [/bonbon|candy/i, "rare-candy"], [/poussi|stardust/i, "stardust"], [/chromatique|shiny/i, "star-piece"],
+  [/œuf|oeuf|egg|éclosion/i, "mystery-egg"], [/encens|incense/i, "lax-incense"],
+  [/particule|max particle|power spot|dynamax|combat max/i, "max-mushrooms"], [/raid/i, "premier-ball"],
+  [/safari/i, "safari-ball"], [/\bxp\b/i, "lucky-egg"]
+];
+const bonusIcon = b => (BONUS_ICONS.find(([re]) => re.test(b)) || [0, "poke-ball"])[1];
 
 const fmtDay = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+const fmtLong = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 const fmtTime = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
-
-// Les heures du flux sont en heure de Paris ; on calcule "maintenant" en heure de Paris aussi.
 function parisNow() {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", hourCycle: "h23",
     year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
@@ -145,34 +323,235 @@ function parisNow() {
   return new Date(`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`);
 }
 const d = s => s ? new Date(s) : null;
-
+const sameDay = (a, b) => a.toDateString() === b.toDateString();
 function rel(ms) {
   const m = Math.round(ms / 60000), h = Math.floor(m / 60), j = Math.floor(h / 24);
   if (j >= 2) return `${j} j`;
   if (h >= 1) return `${h} h ${String(m % 60).padStart(2, "0")}`;
   return `${m} min`;
 }
-function color(s) { return s >= 75 ? "var(--good)" : s >= 50 ? "var(--mid)" : "var(--low)"; }
-
+const scoreCol = s => s >= 75 ? "var(--good)" : s >= 50 ? "var(--mid)" : "var(--low)";
 function status(e, now) {
   const s = d(e.start), en = d(e.end);
-  if (!s) return { live: false, text: "Date à venir" };
-  if (s <= now && (!en || en > now)) return { live: true, text: en ? `En cours · finit dans ${rel(en - now)}` : "En cours" };
-  return { live: false, text: `Dans ${rel(s - now)}` };
+  if (!s) return { cls: "", text: "Date à venir" };
+  if (s <= now && (!en || en > now)) return { cls: "live", live: true, text: en ? `En cours · finit dans ${rel(en - now)}` : "En cours" };
+  const ms = s - now;
+  return { cls: ms < 864e5 ? "soon" : "", text: `Dans ${rel(ms)}` };
 }
-
 function range(s, en) {
   const a = d(s), b = d(en);
   if (!a) return "Date à confirmer";
   if (!b) return `${fmtDay.format(a)} ${fmtTime.format(a)}`;
-  return `${fmtDay.format(a)} ${fmtTime.format(a)} → ${a.toDateString() === b.toDateString() ? "" : fmtDay.format(b) + " "}${fmtTime.format(b)}`;
+  return `${fmtDay.format(a)} ${fmtTime.format(a)} → ${sameDay(a, b) ? "" : fmtDay.format(b) + " "}${fmtTime.format(b)}`;
 }
 
-// Bloc horaire : toujours l'heure de France en premier, puis l'équivalent ailleurs
-function timeBlock(e, now, full) {
+function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+function html(tag, cls, h) { const n = el(tag, cls); n.innerHTML = h; return n; }
+function ring(score, lg) {
+  const r = el("div", "ring" + (lg ? " lg" : "")); r.style.setProperty("--p", score); r.style.setProperty("--col", scoreCol(score));
+  r.title = `Vaut le coup : ${score} %`; r.append(el("span", "num", score + "%")); return r;
+}
+function tag(c) { const t = html("span", "tag", ICON[c] + `<span></span>`); t.lastChild.textContent = CATS[c].label; t.style.setProperty("--c", CATS[c].color); return t; }
+// Pokémon cités dans le titre, pour les événements sans liste (Dynamax, Heures de Raids…)
+const TITLE_NAMES = Object.keys(FRDEX).filter(n => n.length >= 4).sort((a, b) => b.length - a.length)
+  .map(n => [n, new RegExp(`(?<!\\p{L})${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?!\\p{L})`, "iu")]);
+const monCache = new Map();
+function mons(e) {
+  if (monCache.has(e)) return monCache.get(e);
+  const seen = new Set(), out = [];
+  for (const s of e.sections || []) for (const p of s.pokemon) if (!seen.has(p.name)) { seen.add(p.name); out.push(p); }
+  if (!out.length) for (const [n, re] of TITLE_NAMES) if (re.test(e.name)) out.push({ name: n, shiny: false, fromTitle: true });
+  monCache.set(e, out); return out;
+}
+const banner = e => (SPR.banner || {})[e.id] || e.image || null;
+function who(e, max) {
+  const ms = mons(e); if (!ms.length) return null;
+  const w = el("div", "who");
+  for (const p of ms.slice(0, max)) { const s = el("span"), i = sprite(p, 32); if (i) s.append(i); s.append(p.name); w.append(s); }
+  if (ms.length > max) w.append(el("span", "plus", `+${ms.length - max}`));
+  return w;
+}
+function sprite(p, size) {
+  const id = dexOf(p.name); if (!id) return null;
+  const img = el("img"); img.alt = p.name; img.loading = "lazy"; img.decoding = "async";
+  img.dataset.id = id; img.dataset.shiny = p.shiny ? "1" : "";
+  img.src = art(id, p.shiny && state.shinyAll); if (size) img.width = img.height = size;
+  return img;
+}
+
+// État
+let events = [], updatedAt = "";
+const state = { cat: "all", q: "", hotOnly: false, shinyAll: false, view: "list", weekOff: 0 };
+try { Object.assign(state, JSON.parse(localStorage.getItem("radar-go-v2") || "{}"), { q: "", weekOff: 0 }); } catch (e) {}
+const save = () => { try { localStorage.setItem("radar-go-v2", JSON.stringify(state)); } catch (e) {} };
+
+function matches(e, now) {
+  if (state.cat !== "all" && cat(e) !== state.cat) return false;
+  if (state.hotOnly && e.score < 70) return false;
+  if (state.q) {
+    const q = norm(state.q);
+    const hay = norm([e.name, e.type, ...mons(e).map(p => p.name), ...(e.bonuses || [])].join(" "));
+    if (!hay.includes(q)) return false;
+  }
+  return true;
+}
+const upcoming = now => events.filter(e => !e.end || d(e.end) > now)
+  .sort((a, b) => (a.start ? d(a.start) : Infinity) - (b.start ? d(b.start) : Infinity));
+
+function renderHero(now) {
+  const box = $("#hero"); box.replaceChildren();
+  const up = upcoming(now);
+  const pick = up.filter(e => e.start && d(e.start) < new Date(+now + 14 * 864e5))
+    .sort((a, b) => b.score - a.score || d(a.start) - d(b.start))[0];
+  if (pick) {
+    const c = cat(pick), f = el("article", "feature"); f.style.setProperty("--c", CATS[c].color);
+    f.tabIndex = 0; f.setAttribute("role", "button"); f.onclick = () => openEv(pick);
+    f.onkeydown = ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openEv(pick); } };
+    const t = el("div", "txt");
+    t.append(el("span", "eyebrow", "À ne pas rater · " + pick.type));
+    t.append(el("h2", null, pick.name));
+    const w = el("div", "when"); w.innerHTML = `<b></b>`; w.firstChild.textContent = "🇫🇷 " + range(pick.start, pick.end); t.append(w);
+    t.append(el("span", "st " + status(pick, now).cls, status(pick, now).text));
+    if (pick.why) t.append(el("p", "why", pick.why));
+    const ban = banner(pick);
+    if (ban) {
+      f.classList.add("has-ban");
+      const im = el("img", "fban"); im.src = ban; im.alt = pick.name; f.append(im);
+      const w = who(pick, 6); if (w) t.append(w);
+      f.append(t, ring(pick.score, true));
+    } else {
+      const pics = el("div", "pics");
+      const ms = mons(pick).slice(0, 3).map(p => sprite(p)).filter(Boolean);
+      if (ms.length) pics.append(...ms); else pics.append(html("div", "big-ico", ICON[c]));
+      f.append(t, pics, ring(pick.score, true));
+    }
+    box.append(f);
+  }
+  const side = el("div", "side");
+  const live = up.filter(e => status(e, now).live);
+  const h = el("h2"); if (live.length) h.append(el("span", "dot")); h.append(live.length ? `En cours maintenant (${live.length})` : "Prochainement");
+  side.append(h);
+  const list = (live.length ? live : up.slice(0, 5)).slice(0, 6);
+  if (!list.length) side.append(el("div", "empty", "Aucun événement en ce moment."));
+  for (const e of list) side.append(row(e, now));
+  box.append(side);
+}
+function row(e, now) {
+  const c = cat(e), r = el("button", "row"); r.type = "button"; r.style.setProperty("--c", CATS[c].color); r.onclick = () => openEv(e);
+  const mini = el("span", "mini"), p = mons(e)[0], ban = banner(e), img = ban ? el("img") : p && sprite(p);
+  if (ban) { mini.classList.add("ban"); img.src = ban; img.alt = ""; }
+  if (img) mini.append(img); else mini.innerHTML = ICON[c];
+  const t = el("span", "t"); t.append(el("b", null, e.name), el("span", null, status(e, now).text));
+  r.append(mini, t, ring(e.score)); r.lastChild.style.cssText += "width:38px;height:38px"; r.lastChild.firstChild.style.cssText = "width:30px;height:30px;font-size:11.5px";
+  return r;
+}
+
+function card(e, now) {
+  const c = cat(e), st = status(e, now);
+  const a = el("button", "ev" + (st.live ? " live" : "")); a.type = "button"; a.style.setProperty("--c", CATS[c].color);
+  a.onclick = () => openEv(e);
+  const top = el("div", "art"), ms = mons(e), ban = banner(e);
+  if (ban) {
+    top.classList.add("ban");
+    const im = el("img", "banner"); im.src = ban; im.alt = e.name; im.loading = "lazy"; top.append(im);
+  } else {
+    const imgs = ms.slice(0, 3).map(p => sprite(p)).filter(Boolean);
+    if (imgs.length) top.append(...imgs); else top.append(html("div", "ico", ICON[c]));
+    if (ms.length > 3) top.append(el("span", "more", `+${ms.length - 3}`));
+  }
+  top.append(tag(c), ring(e.score));
+  const b = el("div", "body");
+  b.append(el("span", "st " + st.cls, st.text), el("h3", null, e.name));
+  const w0 = who(e, 4); if (w0) b.append(w0);
+  const w = el("div", "when"); w.append(el("b", null, range(e.start, e.end)));
+  if (e.times && e.times.mode === "local") w.append(" · heure locale");
+  b.append(w);
+  const bons = e.bonuses || [];
+  if (bons.length) {
+    const ic = el("div", "icons"), seen = new Set();
+    for (const x of bons) { const k = bonusIcon(x); if (seen.has(k)) continue; seen.add(k);
+      const i = el("img"); i.src = itemSrc(k); i.alt = ""; i.title = x; ic.append(i); }
+    b.append(ic);
+  }
+  a.append(top, b);
+  return a;
+}
+
+function renderList(now) {
+  const box = $("#list"); box.replaceChildren();
+  const shown = upcoming(now).filter(e => matches(e, now));
+  if (!shown.length) { box.append(el("div", "empty day", "Aucun événement pour ces filtres.")); return; }
+  const live = shown.filter(e => status(e, now).live), next = shown.filter(e => !status(e, now).live);
+  if (live.length) { box.append(el("h2", "day", "En cours")); live.forEach(e => box.append(card(e, now))); }
+  let last = "";
+  for (const e of next) {
+    const k = e.start ? fmtLong.format(d(e.start)) : "Date à venir";
+    if (k !== last) { box.append(el("h2", "day", k)); last = k; }
+    box.append(card(e, now));
+  }
+}
+
+function renderWeek(now) {
+  const box = $("#week"); box.replaceChildren();
+  const mon = new Date(now); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7) + state.weekOff * 7);
+  const days = [...Array(7)].map((_, i) => { const x = new Date(mon); x.setDate(x.getDate() + i); return x; });
+  const wEnd = new Date(+days[6] + 864e5);
+  const head = el("div", "wk-head");
+  head.append(el("h2", null, `Semaine du ${fmtDay.format(days[0])} au ${fmtDay.format(days[6])}`));
+  const nav = el("div", "wk-nav");
+  const mk = (t, f) => { const b = el("button", "btn", t); b.type = "button"; b.onclick = f; return b; };
+  nav.append(mk("← Précédente", () => { state.weekOff--; render(); }), mk("Cette semaine", () => { state.weekOff = 0; render(); }), mk("Suivante →", () => { state.weekOff++; render(); }));
+  head.append(nav); box.append(head);
+  const evs = events.filter(e => e.start && matches(e, now));
+  const inWeek = evs.filter(e => d(e.start) < wEnd && (d(e.end) || d(e.start)) >= days[0]);
+  const isLong = e => e.end && d(e.end) - d(e.start) > 30 * 36e5;
+  const longs = inWeek.filter(isLong);
+  if (longs.length) {
+    const L = el("div", "long"); L.append(el("h3", null, "Sur plusieurs jours"));
+    const g = el("div", "span");
+    for (const e of longs) {
+      const s = Math.max(0, Math.floor((d(e.start) - days[0]) / 864e5)), en = Math.min(6, Math.floor((d(e.end) - 1 - days[0]) / 864e5));
+      const b = el("button", null, e.name); b.type = "button"; b.title = `${e.name} · ${range(e.start, e.end)}`;
+      b.style.setProperty("--c", CATS[cat(e)].color); b.style.gridColumn = `${s + 1} / ${en + 2}`; b.onclick = () => openEv(e);
+      g.append(b);
+    }
+    L.append(g); box.append(L);
+  }
+  const cal = el("div", "cal");
+  for (const day of days) {
+    const col = el("div", "col" + (sameDay(day, now) ? " today" : ""));
+    const h = el("h4", null, fmtDay.format(day).split(" ")[0]); h.append(el("small", null, fmtDay.format(day).split(" ").slice(1).join(" "))); col.append(h);
+    const list = inWeek.filter(e => !isLong(e) && sameDay(d(e.start), day)).sort((a, b) => d(a.start) - d(b.start));
+    if (!list.length) col.append(el("span", "alt", "Rien de prévu"));
+    for (const e of list) {
+      const s = el("button", "slot"); s.type = "button"; s.style.setProperty("--c", CATS[cat(e)].color); s.onclick = () => openEv(e);
+      s.append(el("time", "num", `${fmtTime.format(d(e.start))}${e.end ? "–" + fmtTime.format(d(e.end)) : ""}`), el("b", null, e.name));
+      const sp = el("span", "sp"); mons(e).slice(0, 4).forEach(p => { const i = sprite(p); if (i) sp.append(i); });
+      if (sp.childNodes.length) s.append(sp);
+      col.append(s);
+    }
+    cal.append(col);
+  }
+  box.append(cal);
+}
+
+function worldChart(world, now) {
+  const t0 = Math.min(...world.map(w => d(w.start))), t1 = Math.max(...world.map(w => d(w.end || w.start)));
+  const span = Math.max(t1 - t0, 1), pct = v => ((v - t0) / span) * 100;
+  const box = el("div", "world");
+  box.append(el("div", "alt", "Le créneau dans chaque pays, en heure française :"));
+  for (const w of world) {
+    const r = el("div", "wrow" + (w.zone === "France" ? " me" : "")), track = el("div", "track"), b = el("div", "b");
+    const s = d(w.start), en = d(w.end || w.start);
+    b.style.left = pct(s) + "%"; b.style.width = Math.max(pct(en) - pct(s), 2) + "%"; track.append(b);
+    if (now >= t0 && now <= t1) { const n = el("div", "now"); n.style.left = pct(now) + "%"; n.title = "Maintenant"; track.append(n); }
+    r.append(el("span", "lbl", w.zone), track, el("span", "hrs num", range(w.start, w.end))); box.append(r);
+  }
+  return box;
+}
+function timeBlock(e, now) {
   const t = e.times || { mode: e.timeMode || "fr" }, box = el("div", "time");
-  const fr = el("div", "frline"); fr.append(el("b", null, "🇫🇷 En France : "), document.createTextNode(range(e.start, e.end)));
-  box.append(fr);
+  const fr = el("div"); fr.append(el("b", null, "🇫🇷 En France : "), range(e.start, e.end)); box.append(fr);
   if (t.mode === "fr") box.append(el("span", "mode fr", "Même moment partout dans le monde"));
   if (t.mode === "city") {
     box.append(el("span", "mode city", t.city ? `Sur place à ${t.city}` : "Sur place, heure de la ville"));
@@ -180,130 +559,99 @@ function timeBlock(e, now, full) {
   }
   if (t.mode === "local" && t.world) {
     box.append(el("span", "mode local", "Heure locale dans chaque pays"));
-    const first = t.world[0], last = t.world[t.world.length - 1];
-    box.append(el("div", "alt", `🌍 Commence dès ${range(first.start)} (heure FR) en ${first.zone}, finit ${range(last.end || last.start)} (heure FR) à ${last.zone}`));
-    if (full) box.append(worldChart(t.world, now));
+    box.append(worldChart(t.world, now));
   }
   return box;
 }
 
-// Créneau de l'événement dans chaque fuseau, placé sur l'axe de l'heure française
-function worldChart(world, now) {
-  const t0 = Math.min(...world.map(w => d(w.start))), t1 = Math.max(...world.map(w => d(w.end || w.start)));
-  const span = Math.max(t1 - t0, 1), pct = v => ((v - t0) / span) * 100;
-  const box = el("div", "world");
-  box.append(el("div", "wcap", "Le créneau dans chaque pays, en heure française :"));
-  for (const w of world) {
-    const row = el("div", "wrow" + (w.zone === "France" ? " me" : "")), track = el("div", "track");
-    const s = d(w.start), en = d(w.end || w.start), bar = el("div", "bar");
-    bar.style.left = pct(s) + "%"; bar.style.width = Math.max(pct(en) - pct(s), 2) + "%";
-    track.append(bar);
-    if (now >= t0 && now <= t1) { const n = el("div", "now"); n.style.left = pct(now) + "%"; n.title = "Maintenant"; track.append(n); }
-    row.append(el("span", "lbl", w.zone), el("span", "hrs", range(w.start, w.end)), track); box.append(row);
-  }
-  return box;
-}
-
-function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
-
-function card(e, now) {
-  const st = status(e, now);
-  const c = el("article", "ev" + (st.live ? " live" : ""));
-  c.append(el("div", "name", e.name));
-  const sc = el("div", "score");
-  const ring = el("div", "ring"); ring.style.setProperty("--p", e.score); ring.style.setProperty("--c", color(e.score));
-  ring.append(el("span", null, e.score + "%")); sc.append(ring, el("small", null, "vaut le coup"));
-  c.append(sc);
-  const m = el("div", "meta");
-  m.append(el("span", "pill", e.type));
-  c.append(m, timeBlock(e, now, false));
-  const m2 = el("div", "meta");
-  m2.append(el("span", "pill" + (st.live ? " live" : ""), st.text));
-  if (e.link) { const a = el("a", null, "Détails ↗"); a.href = e.link; a.target = "_blank"; a.rel = "noopener"; m2.append(a); }
-  c.append(m2);
-  if (e.why) c.append(el("div", "why", e.why));
-  const secs = e.sections || [], bons = e.bonuses || [], world = e.times && e.times.mode === "local" && e.times.world;
-  if (secs.length || bons.length || world) {
-    const nMons = secs.reduce((n, s) => n + s.pokemon.length, 0);
-    const d = el("details", "more");
-    d.append(el("summary", null, [nMons ? `${nMons} Pokémon` : "", bons.length ? `${bons.length} bonus` : "", world ? "horaires dans le monde" : ""].filter(Boolean).join(" · ")));
-    if (world) d.append(worldChart(world, now));
-    for (const s of secs) {
-      const box = el("div", "sec"), list = el("div", "mons");
-      box.append(el("h3", null, s.title));
-      for (const p of s.pokemon) list.append(el("span", "mon" + (p.shiny ? " shiny" : ""), p.name + (p.shiny ? " ✨" : "")));
-      box.append(list); d.append(box);
+const dlg = $("#dlg");
+function openEv(e) {
+  const now = parisNow(), c = cat(e), st = status(e, now);
+  dlg.replaceChildren(); dlg.style.setProperty("--c", CATS[c].color);
+  const h = el("div", "dh"), t = el("div", "t");
+  t.append(tag(c), el("h2", null, e.name), el("span", "st " + st.cls, st.text));
+  if (e.why) t.append(el("div", "alt", e.why));
+  const x = el("button", "x", "×"); x.type = "button"; x.setAttribute("aria-label", "Fermer"); x.onclick = () => dlg.close();
+  h.append(t, ring(e.score, true), x);
+  const b = el("div", "db");
+  b.append(timeBlock(e, now));
+  const secs = (e.sections || []).length ? e.sections : (mons(e).length ? [{ title: "Pokémon de l'événement", pokemon: mons(e) }] : []);
+  for (const s of secs) {
+    const sec = el("section"), hh = el("h3", null, s.title);
+    if (s.pokemon.some(p => p.shiny)) hh.append(el("small", null, "touche un ✨ pour voir le shiny"));
+    const g = el("div", "mons");
+    for (const p of s.pokemon) {
+      const m = el(p.shiny ? "button" : "div", "mon" + (p.shiny ? " can" : "")); if (p.shiny) m.type = "button";
+      const img = sprite(p); if (img) { img.loading = "eager"; m.append(img); }
+      m.append(el("b", null, p.name));
+      if (p.shiny) {
+        m.append(el("span", "sh", "✨ shiny"));
+        let on = state.shinyAll; m.classList.toggle("on", on);
+        m.onclick = () => { on = !on; m.classList.toggle("on", on); if (img) img.src = art(+img.dataset.id, on); };
+      }
+      g.append(m);
     }
-    if (bons.length) {
-      const box = el("div", "sec"), ul = el("ul", "bon");
-      box.append(el("h3", null, "Bonus"));
-      bons.forEach(b => ul.append(el("li", null, b)));
-      box.append(ul); d.append(box);
-    }
-    c.append(d);
+    sec.append(hh, g); b.append(sec);
   }
-  return c;
+  if ((e.bonuses || []).length) {
+    const sec = el("section"), ul = el("ul", "bons");
+    sec.append(el("h3", null, "Bonus"));
+    for (const x of e.bonuses) { const li = el("li"), i = el("img"); i.src = itemSrc(bonusIcon(x)); i.alt = ""; li.append(i, el("span", null, x)); ul.append(li); }
+    sec.append(ul); b.append(sec);
+  }
+  if (e.link) { const a = el("a", "cta", "Voir sur LeekDuck ↗"); a.href = e.link; a.target = "_blank"; a.rel = "noopener"; b.append(a); }
+  const ban = banner(e);
+  if (ban) { const im = el("img", "dban"); im.src = ban; im.alt = e.name; dlg.append(im); }
+  dlg.append(h, b);
+  dlg.showModal(); dlg.scrollTop = 0;
 }
+dlg.addEventListener("click", ev => { if (ev.target === dlg) dlg.close(); });
 
-function preview(e) {
-  const names = (e.sections || []).flatMap(s => s.pokemon.map(p => p.name + (p.shiny ? " ✨" : "")));
-  const uniq = [...new Set(names)];
-  return uniq.length ? uniq.slice(0, 5).join(", ") + (uniq.length > 5 ? "…" : "") : "";
+function renderChips(now) {
+  const box = $("#chips"); box.replaceChildren();
+  const up = upcoming(now);
+  for (const k in CATS) {
+    const n = k === "all" ? up.length : up.filter(e => cat(e) === k).length;
+    if (!n && k !== "all") continue;
+    const b = html("button", "chip", ICON[k] + "<span></span>"); b.type = "button"; b.lastChild.textContent = CATS[k].label;
+    b.append(el("span", "n num", n)); b.style.setProperty("--c", CATS[k].color);
+    b.setAttribute("aria-pressed", state.cat === k); b.onclick = () => { state.cat = k; save(); render(); };
+    box.append(b);
+  }
 }
 
 function render() {
   if (!events.length) return;
-  const now = parisNow(), week = new Date(now.getTime() + 7 * 864e5);
-  const upcoming = events.filter(e => !e.end || d(e.end) > now)
-    .sort((a, b) => (a.start ? d(a.start) : Infinity) - (b.start ? d(b.start) : Infinity));
-
-  const top = upcoming.filter(e => e.score >= 70 && e.start && d(e.start) < new Date(now.getTime() + 14 * 864e5))
-    .sort((a, b) => b.score - a.score).slice(0, 3);
-  const topBox = $("#top"); topBox.replaceChildren();
-  if (!top.length) topBox.append(el("div", "empty", "Rien de très fort dans les 14 prochains jours."));
-  for (const e of top) {
-    const h = el("div", "hot"), big = el("div", "big", e.score + "%");
-    big.style.color = color(e.score);
-    h.append(big, el("div", "name", e.name), timeBlock(e, now, false), el("div", "meta", status(e, now).text));
-    const pv = preview(e); if (pv) h.append(el("div", "preview", pv));
-    topBox.append(h);
-  }
-
-  const f = {
-    all: () => true, top: e => e.score >= 70,
-    live: e => status(e, now).live,
-    week: e => e.start && d(e.start) <= week,
-    raid: e => /raid|max/.test(e.typeKey || "")
-  }[filter] || (() => true);
-  const shown = upcoming.filter(f);
-  const list = $("#list"); list.replaceChildren();
-  if (!shown.length) list.append(el("div", "empty", "Aucun événement pour ce filtre."));
-  shown.forEach(e => list.append(card(e, now)));
-  $("#list-title").textContent = `${shown.length} événement${shown.length > 1 ? "s" : ""}`;
-  document.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === filter)));
+  const now = parisNow();
+  renderChips(now); renderHero(now);
+  $("#list").hidden = state.view !== "list"; $("#week").hidden = state.view !== "week";
+  $("#vList").setAttribute("aria-pressed", state.view === "list"); $("#vWeek").setAttribute("aria-pressed", state.view === "week");
+  state.view === "list" ? renderList(now) : renderWeek(now);
+}
+function tick() {
+  const now = parisNow();
+  $("#clock").textContent = fmtTime.format(now) + " à Paris";
+  if (updatedAt) $("#upd").textContent = `Mis à jour ${fmtDay.format(d(updatedAt))} à ${fmtTime.format(d(updatedAt))}`;
 }
 
-document.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => {
-  filter = b.dataset.f; try { localStorage.setItem("radar-filter", filter); } catch (e) {}
-  render();
-}));
+$("#q").addEventListener("input", ev => { state.q = ev.target.value; render(); });
+$("#hotOnly").checked = state.hotOnly; $("#shinyAll").checked = state.shinyAll;
+$("#hotOnly").onchange = ev => { state.hotOnly = ev.target.checked; save(); render(); };
+$("#shinyAll").onchange = ev => { state.shinyAll = ev.target.checked; save(); render(); };
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => { state.view = b.dataset.view; save(); render(); });
 
-// Le flux est mis à jour toutes les heures par GitHub Actions (feed.json à côté de cette page)
 async function load() {
-  try {
-    const r = await fetch("feed.json?t=" + Date.now(), { cache: "no-store" });
-    const data = await r.json();
-    events = data.events || [];
-    $("#updated").textContent = `Mis à jour ${data.updatedAt.replace("T", " à ")} (heure de Paris)`;
-    render();
-  } catch (e) {
-    $("#updated").textContent = "Impossible de charger les événements. Vérifie ta connexion.";
-  }
+  let feed = null;
+  try { const r = await fetch("feed.json", { cache: "no-store" }); if (r.ok) feed = await r.json(); } catch (e) {}
+  feed = feed || FEED_FALLBACK || { events: [] };
+  events = feed.events || []; updatedAt = feed.updatedAt || "";
+  tick(); render();
+  if (!events.length) $("#list").append(el("div", "empty", "Impossible de charger les événements."));
 }
 load();
+setInterval(tick, 15000);
 setInterval(render, 60000);
-setInterval(load, 10 * 60000);
-document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
 </script>
+
 </body>
 </html>
