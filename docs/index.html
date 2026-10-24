@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1820">
+<title>Radar GO</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+/* Layout : une colonne façon appli mobile, en-tête collant, "à ne pas rater" puis la liste filtrable */
+:root{
+  --bg:#eef3f6; --surface:#ffffff; --ink:#0f2a3a; --muted:#5b7282; --line:#d6e1e8;
+  --accent:#1f7a9e; --accent-ink:#ffffff; --sun:#f2b632;
+  --good:#1f9d5b; --mid:#d98a0b; --low:#c2483d;
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b1820; --surface:#12242f; --ink:#e6f0f5; --muted:#8fa6b3; --line:#22394a;
+  --accent:#4fb3d9; --accent-ink:#06202c; --sun:#f5c452;
+  --good:#3cc47c; --mid:#f0a830; --low:#ec6b5f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1820; --surface:#12242f; --ink:#e6f0f5; --muted:#8fa6b3; --line:#22394a;
+  --accent:#4fb3d9; --accent-ink:#06202c; --sun:#f5c452;
+  --good:#3cc47c; --mid:#f0a830; --low:#ec6b5f; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:18px 10px;display:grid;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.radar{width:40px;height:40px;border-radius:50%;flex:none;position:relative;overflow:hidden;
+  background:radial-gradient(circle,var(--accent) 0 3px,transparent 4px),repeating-radial-gradient(circle,transparent 0 7px,var(--line) 7px 8px);border:2px solid var(--accent)}
+.radar::after{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,color-mix(in srgb,var(--accent) 55%,transparent),transparent 25%);animation:sweep 3s linear infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.radar::after{animation:none}}
+h1{font-family:var(--display);font-weight:800;font-size:1.7rem;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:.85rem}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{font:600 .85rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 14px;white-space:nowrap;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip:focus-visible,a:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+h2{font-family:var(--display);font-weight:600;font-size:1.05rem;margin:22px 0 10px;text-wrap:balance}
+.top{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.hot{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:6px;min-width:0}
+.hot .big{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;font-variant-numeric:tabular-nums}
+.list{display:grid;gap:10px}
+.ev{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr auto;gap:4px 14px;min-width:0}
+.ev.live{border-color:var(--good)}
+.name{font-weight:600;font-size:1rem;min-width:0;overflow-wrap:anywhere}
+.meta{color:var(--muted);font-size:.85rem;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.pill{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:6px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.pill.live{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.score{grid-row:1/span 3;grid-column:2;text-align:center;align-self:start;min-width:58px}
+.ring{--p:50;--c:var(--mid);width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--c) calc(var(--p)*1%),var(--line) 0)}
+.ring span{width:42px;height:42px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:800 .95rem var(--display);font-variant-numeric:tabular-nums}
+.score small{display:block;color:var(--muted);font-size:.68rem;margin-top:3px}
+.why{color:var(--muted);font-size:.85rem;grid-column:1}
+.when{font-variant-numeric:tabular-nums}
+a{color:var(--accent);font-weight:600;font-size:.85rem;text-decoration:none}
+details.more{grid-column:1/-1;margin-top:6px;border-top:1px solid var(--line);padding-top:8px}
+details.more summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:.85rem;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+details.more[open] summary::before{content:"▾ "}
+.sec{margin-top:10px;display:grid;gap:6px}
+.sec h3{margin:0;font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.mons{display:flex;flex-wrap:wrap;gap:6px}
+.mon{font-size:.82rem;padding:3px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+.mon.shiny{border-color:color-mix(in srgb,var(--sun) 70%,var(--line));background:color-mix(in srgb,var(--sun) 14%,var(--surface))}
+.bon{margin:0;padding-left:18px;color:var(--ink);font-size:.85rem;display:grid;gap:3px}
+.preview{color:var(--muted);font-size:.82rem;overflow-wrap:anywhere}
+.time{grid-column:1;display:grid;gap:3px;margin-top:2px}
+.frline{font-weight:600;font-variant-numeric:tabular-nums}
+.frline b{font-weight:600;color:var(--accent)}
+.alt{color:var(--muted);font-size:.84rem;font-variant-numeric:tabular-nums}
+.mode{font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:6px;justify-self:start}
+.mode.fr{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--good)}
+.mode.local{background:color-mix(in srgb,var(--sun) 22%,transparent);color:var(--ink)}
+.mode.city{background:color-mix(in srgb,var(--low) 14%,transparent);color:var(--low)}
+.world{display:grid;gap:5px;margin-top:6px}
+.wrow{display:grid;grid-template-columns:7.5em 1fr;gap:2px 8px;align-items:center;font-size:.8rem}
+.wrow .lbl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrow .hrs{font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+.wrow.me .lbl,.wrow.me .hrs{color:var(--accent);font-weight:600}
+.track{grid-column:1/-1;position:relative;height:6px;background:var(--bg);border-radius:3px;min-width:0}
+.bar{position:absolute;top:0;bottom:0;border-radius:3px;background:color-mix(in srgb,var(--accent) 45%,transparent)}
+.wrow.me .bar{background:var(--accent)}
+.now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--low)}
+.wcap{font-size:.75rem;color:var(--muted)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:20px;color:var(--muted)}
+.legend{color:var(--muted);font-size:.8rem;margin-top:22px;display:grid;gap:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="radar" aria-hidden="true"></div>
+      <div><h1>Radar GO</h1><div class="sub" id="updated">Chargement des événements…</div></div>
+    </div>
+    <div class="chips" role="group" aria-label="Filtres">
+      <button class="chip" id="f-all" data-f="all" aria-pressed="true">Tout</button>
+      <button class="chip" id="f-top" data-f="top" aria-pressed="false">Vaut le coup ≥ 70 %</button>
+      <button class="chip" id="f-live" data-f="live" aria-pressed="false">En cours</button>
+      <button class="chip" id="f-week" data-f="week" aria-pressed="false">7 prochains jours</button>
+      <button class="chip" id="f-raid" data-f="raid" aria-pressed="false">Raids</button>
+    </div>
+  </header>
+
+  <h2>À ne pas rater</h2>
+  <div class="top" id="top"><div class="empty">Les meilleurs événements à venir apparaîtront ici.</div></div>
+
+  <h2 id="list-title">Tous les événements</h2>
+  <div class="list" id="list"><div class="empty">Chargement des événements…</div></div>
+
+  <div class="legend">
+    <div>Toutes les heures sont données <b>à l'heure française</b> (Paris).</div>
+    <div><b>Même moment partout</b> : l'événement commence au même instant dans le monde entier.</div>
+    <div><b>Heure locale dans chaque pays</b> : 14h à Paris, 14h à Tokyo… Ouvre « horaires dans le monde » pour voir quand ça se passe ailleurs, en heure française.</div>
+    <div><b>Sur place</b> : événement dans une ville, avec l'heure de la ville et son équivalent en France.</div>
+    <div>✨ = peut être chromatique (shiny).</div>
+    <div>Score « vaut le coup » : estimation selon le type d'événement, les shiny, les bonus et les spawns. Source : LeekDuck via ScrapedDuck, noms français via PokeAPI. Mis à jour toutes les heures par GitHub.</div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let events = [], filter = "all";
+try { filter = localStorage.getItem("radar-filter") || "all"; } catch (e) {}
+
+const fmtDay = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+const fmtTime = new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit" });
+
+// Les heures du flux sont en heure de Paris ; on calcule "maintenant" en heure de Paris aussi.
+function parisNow() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", hourCycle: "h23",
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })
+    .formatToParts(new Date()).map(x => [x.type, x.value]));
+  return new Date(`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`);
+}
+const d = s => s ? new Date(s) : null;
+
+function rel(ms) {
+  const m = Math.round(ms / 60000), h = Math.floor(m / 60), j = Math.floor(h / 24);
+  if (j >= 2) return `${j} j`;
+  if (h >= 1) return `${h} h ${String(m % 60).padStart(2, "0")}`;
+  return `${m} min`;
+}
+function color(s) { return s >= 75 ? "var(--good)" : s >= 50 ? "var(--mid)" : "var(--low)"; }
+
+function status(e, now) {
+  const s = d(e.start), en = d(e.end);
+  if (!s) return { live: false, text: "Date à venir" };
+  if (s <= now && (!en || en > now)) return { live: true, text: en ? `En cours · finit dans ${rel(en - now)}` : "En cours" };
+  return { live: false, text: `Dans ${rel(s - now)}` };
+}
+
+function range(s, en) {
+  const a = d(s), b = d(en);
+  if (!a) return "Date à confirmer";
+  if (!b) return `${fmtDay.format(a)} ${fmtTime.format(a)}`;
+  return `${fmtDay.format(a)} ${fmtTime.format(a)} → ${a.toDateString() === b.toDateString() ? "" : fmtDay.format(b) + " "}${fmtTime.format(b)}`;
+}
+
+// Bloc horaire : toujours l'heure de France en premier, puis l'équivalent ailleurs
+function timeBlock(e, now, full) {
+  const t = e.times || { mode: e.timeMode || "fr" }, box = el("div", "time");
+  const fr = el("div", "frline"); fr.append(el("b", null, "🇫🇷 En France : "), document.createTextNode(range(e.start, e.end)));
+  box.append(fr);
+  if (t.mode === "fr") box.append(el("span", "mode fr", "Même moment partout dans le monde"));
+  if (t.mode === "city") {
+    box.append(el("span", "mode city", t.city ? `Sur place à ${t.city}` : "Sur place, heure de la ville"));
+    if (t.city) box.append(el("div", "alt", `📍 À ${t.city} : ${range(t.cityStart, t.cityEnd)} (heure locale)`));
+  }
+  if (t.mode === "local" && t.world) {
+    box.append(el("span", "mode local", "Heure locale dans chaque pays"));
+    const first = t.world[0], last = t.world[t.world.length - 1];
+    box.append(el("div", "alt", `🌍 Commence dès ${range(first.start)} (heure FR) en ${first.zone}, finit ${range(last.end || last.start)} (heure FR) à ${last.zone}`));
+    if (full) box.append(worldChart(t.world, now));
+  }
+  return box;
+}
+
+// Créneau de l'événement dans chaque fuseau, placé sur l'axe de l'heure française
+function worldChart(world, now) {
+  const t0 = Math.min(...world.map(w => d(w.start))), t1 = Math.max(...world.map(w => d(w.end || w.start)));
+  const span = Math.max(t1 - t0, 1), pct = v => ((v - t0) / span) * 100;
+  const box = el("div", "world");
+  box.append(el("div", "wcap", "Le créneau dans chaque pays, en heure française :"));
+  for (const w of world) {
+    const row = el("div", "wrow" + (w.zone === "France" ? " me" : "")), track = el("div", "track");
+    const s = d(w.start), en = d(w.end || w.start), bar = el("div", "bar");
+    bar.style.left = pct(s) + "%"; bar.style.width = Math.max(pct(en) - pct(s), 2) + "%";
+    track.append(bar);
+    if (now >= t0 && now <= t1) { const n = el("div", "now"); n.style.left = pct(now) + "%"; n.title = "Maintenant"; track.append(n); }
+    row.append(el("span", "lbl", w.zone), el("span", "hrs", range(w.start, w.end)), track); box.append(row);
+  }
+  return box;
+}
+
+function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+
+function card(e, now) {
+  const st = status(e, now);
+  const c = el("article", "ev" + (st.live ? " live" : ""));
+  c.append(el("div", "name", e.name));
+  const sc = el("div", "score");
+  const ring = el("div", "ring"); ring.style.setProperty("--p", e.score); ring.style.setProperty("--c", color(e.score));
+  ring.append(el("span", null, e.score + "%")); sc.append(ring, el("small", null, "vaut le coup"));
+  c.append(sc);
+  const m = el("div", "meta");
+  m.append(el("span", "pill", e.type));
+  c.append(m, timeBlock(e, now, false));
+  const m2 = el("div", "meta");
+  m2.append(el("span", "pill" + (st.live ? " live" : ""), st.text));
+  if (e.link) { const a = el("a", null, "Détails ↗"); a.href = e.link; a.target = "_blank"; a.rel = "noopener"; m2.append(a); }
+  c.append(m2);
+  if (e.why) c.append(el("div", "why", e.why));
+  const secs = e.sections || [], bons = e.bonuses || [], world = e.times && e.times.mode === "local" && e.times.world;
+  if (secs.length || bons.length || world) {
+    const nMons = secs.reduce((n, s) => n + s.pokemon.length, 0);
+    const d = el("details", "more");
+    d.append(el("summary", null, [nMons ? `${nMons} Pokémon` : "", bons.length ? `${bons.length} bonus` : "", world ? "horaires dans le monde" : ""].filter(Boolean).join(" · ")));
+    if (world) d.append(worldChart(world, now));
+    for (const s of secs) {
+      const box = el("div", "sec"), list = el("div", "mons");
+      box.append(el("h3", null, s.title));
+      for (const p of s.pokemon) list.append(el("span", "mon" + (p.shiny ? " shiny" : ""), p.name + (p.shiny ? " ✨" : "")));
+      box.append(list); d.append(box);
+    }
+    if (bons.length) {
+      const box = el("div", "sec"), ul = el("ul", "bon");
+      box.append(el("h3", null, "Bonus"));
+      bons.forEach(b => ul.append(el("li", null, b)));
+      box.append(ul); d.append(box);
+    }
+    c.append(d);
+  }
+  return c;
+}
+
+function preview(e) {
+  const names = (e.sections || []).flatMap(s => s.pokemon.map(p => p.name + (p.shiny ? " ✨" : "")));
+  const uniq = [...new Set(names)];
+  return uniq.length ? uniq.slice(0, 5).join(", ") + (uniq.length > 5 ? "…" : "") : "";
+}
+
+function render() {
+  if (!events.length) return;
+  const now = parisNow(), week = new Date(now.getTime() + 7 * 864e5);
+  const upcoming = events.filter(e => !e.end || d(e.end) > now)
+    .sort((a, b) => (a.start ? d(a.start) : Infinity) - (b.start ? d(b.start) : Infinity));
+
+  const top = upcoming.filter(e => e.score >= 70 && e.start && d(e.start) < new Date(now.getTime() + 14 * 864e5))
+    .sort((a, b) => b.score - a.score).slice(0, 3);
+  const topBox = $("#top"); topBox.replaceChildren();
+  if (!top.length) topBox.append(el("div", "empty", "Rien de très fort dans les 14 prochains jours."));
+  for (const e of top) {
+    const h = el("div", "hot"), big = el("div", "big", e.score + "%");
+    big.style.color = color(e.score);
+    h.append(big, el("div", "name", e.name), timeBlock(e, now, false), el("div", "meta", status(e, now).text));
+    const pv = preview(e); if (pv) h.append(el("div", "preview", pv));
+    topBox.append(h);
+  }
+
+  const f = {
+    all: () => true, top: e => e.score >= 70,
+    live: e => status(e, now).live,
+    week: e => e.start && d(e.start) <= week,
+    raid: e => /raid|max/.test(e.typeKey || "")
+  }[filter] || (() => true);
+  const shown = upcoming.filter(f);
+  const list = $("#list"); list.replaceChildren();
+  if (!shown.length) list.append(el("div", "empty", "Aucun événement pour ce filtre."));
+  shown.forEach(e => list.append(card(e, now)));
+  $("#list-title").textContent = `${shown.length} événement${shown.length > 1 ? "s" : ""}`;
+  document.querySelectorAll(".chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.f === filter)));
+}
+
+document.querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.f; try { localStorage.setItem("radar-filter", filter); } catch (e) {}
+  render();
+}));
+
+// Le flux est mis à jour toutes les heures par GitHub Actions (feed.json à côté de cette page)
+async function load() {
+  try {
+    const r = await fetch("feed.json?t=" + Date.now(), { cache: "no-store" });
+    const data = await r.json();
+    events = data.events || [];
+    $("#updated").textContent = `Mis à jour ${data.updatedAt.replace("T", " à ")} (heure de Paris)`;
+    render();
+  } catch (e) {
+    $("#updated").textContent = "Impossible de charger les événements. Vérifie ta connexion.";
+  }
+}
+load();
+setInterval(render, 60000);
+setInterval(load, 10 * 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+</script>
+</body>
+</html>
