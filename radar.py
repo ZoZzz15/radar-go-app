@@ -497,7 +497,7 @@ def _build(raw):
         start, end, times = timing(e)
         events.append({
             "id": e["eventID"], "name": tr_event(e["name"]), "nameEn": html.unescape(e["name"]),
-            "type": label, "typeKey": e["eventType"], "link": e["link"],
+            "type": label, "typeKey": e["eventType"], "link": e["link"], "image": e.get("image"),
             "start": iso(start), "end": iso(end),
             "timeMode": times["mode"], "times": times, "score": sc, "why": why,
             "sections": d["sections"], "bonuses": d["bonuses"],
